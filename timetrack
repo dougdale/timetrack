@@ -8,6 +8,7 @@ A simple time tracking utility
 
 import sys
 import argparse
+import datetime
 
 import yaml
 
@@ -43,10 +44,49 @@ class TimeTrack:
 
     def __init__(self, configfile, datafile):
         self._config = read_yaml(configfile)
+        self._datafile = datafile
         self._data = read_yaml(datafile)
+        if not self._data:
+            self._data = list()
+
+    def write_data(self):
+        # Brute force overwrite of data file
+        with open(self._datafile, 'w') as yamlfile:
+            yaml.dump(self._data, yamlfile)
+
+    def add_task(self, when, task):
+        self._data.append({when: task})
+
+        self.write_data()
 
     def interactive(self):
-        print(self._config)
+        while True:
+            print('')
+
+            for index, task in enumerate(self._config['tasks']):
+                print('{}) {}'.format(index, task))
+
+            print("\nSelect task number (or 'x' to exit): ")
+            user_input = input()
+
+            if user_input == 'x':
+                break
+
+            try:
+                task_number = int(user_input)
+            except ValueError:
+                print('"{}" is not a number'.format(user_input))
+                continue
+
+            if task_number >= len(self._config['tasks']):
+                print('{} is outside of range'.format(task_number))
+                continue
+
+            task = self._config['tasks'][task_number]
+
+            print('Selected ' + task)
+
+            self.add_task(datetime.datetime.now(), task)
 
 
 if __name__ == '__main__':
