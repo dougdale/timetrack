@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+timetrack
+
+A simple time tracking utility
+"""
+
+import sys
+import argparse
+
+import yaml
+
+
+class TimeTrackError(Exception):
+    """
+    Exception class for exceptions specific to this script
+    """
+
+    pass
+
+
+def read_yaml(filename):
+    """
+    Read YAML file, returning resulting Python data structure
+    """
+
+    try:
+        with open(filename) as yamlfile:
+            data = yaml.load(yamlfile)
+    except IOError as err:
+        raise TimeTrackError('Unable to open {}: {}'.format(filename, str(err)))
+    except yaml.YAMLError as err:
+        raise TimeTrackError('YAML parsing error in {}: {}'.format(filename, str(err)))
+
+    return data
+
+
+class TimeTrack:
+    """
+    Class to manage time tracking information
+    """
+
+    def __init__(self, configfile, datafile):
+        self._config = read_yaml(configfile)
+        self._data = read_yaml(datafile)
+
+    def interactive(self):
+        print(self._config)
+
+
+if __name__ == '__main__':
+    def main(cmdln_args):
+        """
+        Set up and parse arguments
+        Arguments:
+            cmdln_args: List of command line arguments (excluding script name)
+        """
+
+        # Parse arguments with argparse
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter
+
+        parser = argparse.ArgumentParser(description=__doc__,
+                                         formatter_class=formatter_class)
+
+        parser.add_argument('--config',
+                            help='Configuration file',
+                            default='ttconfig.yaml',
+                            type=str)
+
+        parser.add_argument('--datafile',
+                            help='Data file',
+                            default='ttdata.yaml',
+                            type=str)
+
+        args = parser.parse_args(cmdln_args)
+
+        try:
+            timetrack = TimeTrack(args.config, args.datafile)
+
+            timetrack.interactive()
+        except TimeTrackError as err:
+            print('ERROR: ' + str(err))
+
+            return 1
+
+        return 0
+
+
+    # Call main() with parsed args
+    sys.exit(main(sys.argv[1:]))
