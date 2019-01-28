@@ -55,9 +55,61 @@ class TimeTrack:
             yaml.dump(self._data, yamlfile)
 
     def add_task(self, when, task):
-        self._data.append({when: task})
+        self._data.append([when, task])
 
         self.write_data()
+
+    def gather_week_data(self, week_date):
+        year, week_no, _ = week_date.date().isocalendar()
+
+        # Create a list of 7 empty lists
+        week = [ [] for _ in range(7)]
+
+        for item in self._data:
+            a_year, a_week, a_day = a_date.date().isocalendar()
+
+            if a_year == year and a_week == week_no:
+                week[a_day].append(item)
+
+        for day in week:
+            day.sort(key=lambda x: x[0])
+
+        return week
+
+    def report_week_total(self, week_date):
+        week = self.gather_week_data(week_date)
+
+        totals = {}
+
+        for day in week:
+            self.total_day(day, totals)
+
+    def total_day(self, day, totals):
+
+        # Record day off if nothing recorded
+
+        # Use default task if first task time of > default start
+
+        # End last task of day at default end time if not later time recorded
+
+        pass
+
+    def interactive_menu(self):
+        while True:
+            print('')
+            print('t) Totals for this week')
+            print('b) Exit menu')
+
+            user_input = input()
+
+            if user_input == 'b':
+                break
+
+            if user_input == 't':
+                self.report_total(datetime.datetime.now())
+                continue
+
+            print('"{}" is not a valid option'.format(user_input))
 
     def interactive(self):
         while True:
@@ -66,11 +118,15 @@ class TimeTrack:
             for index, task in enumerate(self._config['tasks']):
                 print('{}) {}'.format(index, task))
 
-            print("\nSelect task number (or 'x' to exit): ")
+            print("\nSelect task number, 'm' for menu,  or 'x' to exit: ")
             user_input = input()
 
             if user_input == 'x':
                 break
+
+            if user_input == 'm':
+                self.interactive_menu()
+                continue
 
             try:
                 task_number = int(user_input)
